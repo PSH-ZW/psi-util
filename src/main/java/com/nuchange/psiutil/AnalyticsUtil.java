@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.CollectionUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -187,9 +188,11 @@ public class AnalyticsUtil {
         }, params);
     }
 
-    public static String generateCreateTableForForm(String formName) throws IOException {
+    public static String generateCreateTableForForm(String formPath) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        Forms forms = parseForm(mapper.readTree(AnalyticsUtil.class.getClassLoader().getResource(formName)));
+//        local only
+//        Forms forms = parseForm(mapper.readTree(AnalyticsUtil.class.getClassLoader().getResource(formName)));
+        Forms forms = parseForm(mapper.readTree(new File(formPath)));
         StringBuilder query = new StringBuilder();
         query.append("CREATE TABLE ").append(AnalyticsUtil.generateColumnName(forms.getName())).append("(");
         query.append("id serial PRIMARY KEY, ");
