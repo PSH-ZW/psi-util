@@ -309,13 +309,13 @@ public class AnalyticsUtil {
     }
 
     public static Forms parseForm(JsonNode array){
-        JsonNode resources = array.get("formJson").get("resources");
-        String version = array.get("formJson").get("version").asText();
-        String value = resources.get(0).get("value").toString();
+//        JsonNode resources = array.get("formJson").get("resources");
+//        String version = array.get("formJson").get("version").asText();
+//        String value = resources.get(0).get("value").toString();
         ObjectMapper mapper = new ObjectMapper();
         Forms c = null;
         try {
-            c = mapper.readValue(value.replace("\\", "").replaceAll("^\"|\"$", ""), Forms.class);
+            c = mapper.readValue(array.toString().replace("\\", "").replaceAll("^\"|\"$", ""), Forms.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
