@@ -195,8 +195,8 @@ public class AnalyticsUtil {
         StringBuilder query = new StringBuilder();
         query.append("CREATE TABLE ").append(AnalyticsUtil.generateColumnName(forms.getName())).append("(");
         query.append("id serial PRIMARY KEY, ");
-        Map<UUID, String> columnNames = generateColumnNamesForForm(forms);
-        for (String columnName : columnNames.values()) {
+        Set<String> columnNames = generateColumnNamesAndAddToHasSet(forms);
+        for (String columnName : columnNames) {
             query.append(columnName).append(" varchar, ");
         }
         query.append("encounter_id integer, visit_id integer, patient_id integer, ");
@@ -204,6 +204,24 @@ public class AnalyticsUtil {
         query.append("location_id integer, location_name varchar, instance_id integer)");
 
         return query.toString();
+    }
+
+    private static Set<String> generateColumnNamesAndAddToHasSet(Forms forms) {
+        Map<String, FormTable> obsWithConcepts = new HashMap<>();
+        handleObsControls(forms.getControls(), obsWithConcepts, forms.getName(), null);
+        Set<String> generatedColumnNames = new HashSet<>();
+        if (obsWithConcepts.containsKey(forms.getName())) {
+            for (FormConcept concept : obsWithConcepts.get(forms.getName()).getConcepts()) {
+                String name = AnalyticsUtil.generateColumnName(concept.getName());
+                if(!generatedColumnNames.add(name)) {
+                    String errorMessage = String.format("There is a collision for column name %s." +
+                            " Please update the concept name for one of the form concepts to make it unique.", name);
+                    logger.error(errorMessage);
+                    throw new RuntimeException(errorMessage);
+                }
+            }
+        }
+        return generatedColumnNames;
     }
 
     private static Map<UUID, String> generateColumnNamesForForm(Forms forms) {
