@@ -134,7 +134,7 @@ public class AnalyticsUtil {
             String[] commaSeparated = name.split(",");
             for (String s : commaSeparated) {
                 s = s.trim();
-                String[] spaceSeparated = s.split(" ");
+                String[] spaceSeparated = s.split("\\s+"); //split on multiple spaces.
                 StringBuilder firstLetters = new StringBuilder();
                 for (String word : spaceSeparated) {
                     word = word.trim();
@@ -334,21 +334,16 @@ public class AnalyticsUtil {
         return UUID.fromString(uuidString).toString();
     }
 
-    public static Forms readForm(String fileName) throws IOException {
-        if (formCache.containsKey(fileName)) {
-            return formCache.get(fileName);
+    public static Forms readForm(String filePath) throws IOException {
+        if (formCache.containsKey(filePath)) {
+            return formCache.get(filePath);
         }
-        String resource = replaceSpecialCharWithUnderScore(fileName);
-        logger.debug("Finding file  : " + resource);
+        logger.debug("Finding file  : " + filePath);
         ObjectMapper mapper = new ObjectMapper();
 
-        Forms forms = parseForm(mapper.readTree(AnalyticsUtil.class.getClassLoader().getResource(resource)));
-        formCache.put(fileName, forms);
+        Forms forms = parseForm(mapper.readTree(new File(filePath)));
+        formCache.put(filePath, forms);
         return forms;
-    }
-
-    public static String replaceSpecialCharWithUnderScore(String fileName) {
-        return fileName.replaceAll("&", "_");
     }
 
     public static Map<String, ObsType> extractConceptsFromFile(String fileName) throws IOException {
