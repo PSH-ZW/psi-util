@@ -16,7 +16,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 
-public class analyticsUtil {
+public class AnalyticsUtil {
     public static final String OBS_CONTROL_GROUP = "obsGroupControl";
     public static final String OBS_SECTION_CONTROL = "section";
     public static final String MULTI_SELECT = "multiSelect";
@@ -225,11 +225,6 @@ public class analyticsUtil {
         }
 
         return generatedColumnNames;
-    }
-
-    public static void initialiseTempTableWithPatientAttributes(JdbcTemplate template, Long patientId) {
-        String sql = "call getAttributes(%d)";
-        template.execute(String.format(sql, patientId));
     }
 
     private static UUID parseUuid(String uuidString) {
