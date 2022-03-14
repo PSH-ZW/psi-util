@@ -16,7 +16,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 
-public class AnalyticsUtil {
+public class analyticsUtil {
     public static final String OBS_CONTROL_GROUP = "obsGroupControl";
     public static final String OBS_SECTION_CONTROL = "section";
     public static final String MULTI_SELECT = "multiSelect";
@@ -191,7 +191,6 @@ public class AnalyticsUtil {
     public static String generateCreateTableForForm(String formPath) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 //        local only
-//        Forms forms = parseForm(mapper.readTree(AnalyticsUtil.class.getClassLoader().getResource(formName)));
         Forms forms = parseForm(mapper.readTree(new File(formPath)));
         StringBuilder query = new StringBuilder();
         query.append("CREATE TABLE ").append(AnalyticsUtil.generateColumnName(forms.getName())).append("(");
@@ -226,6 +225,11 @@ public class AnalyticsUtil {
         }
 
         return generatedColumnNames;
+    }
+
+    public static void initialiseTempTableWithPatientAttributes(JdbcTemplate template, Long patientId) {
+        String sql = "call getAttributes(%d)";
+        template.execute(String.format(sql, patientId));
     }
 
     private static UUID parseUuid(String uuidString) {
@@ -309,9 +313,6 @@ public class AnalyticsUtil {
     }
 
     public static Forms parseForm(JsonNode array){
-//        JsonNode resources = array.get("formJson").get("resources");
-//        String version = array.get("formJson").get("version").asText();
-//        String value = resources.get(0).get("value").toString();
         ObjectMapper mapper = new ObjectMapper();
         Forms c = null;
         try {
@@ -330,7 +331,6 @@ public class AnalyticsUtil {
         int position = UUID_POSITION.get(eventCategory);
         String uuidString = tokens[position].substring(0, 36);
         //Doing this to verify the string is a valid UUID, if not, this will throw an exception
-        //TODO: can be removed if not needed.
         return UUID.fromString(uuidString).toString();
     }
 
@@ -384,5 +384,5 @@ public class AnalyticsUtil {
         }
 
     }
-}
 
+}
