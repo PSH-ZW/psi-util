@@ -309,6 +309,8 @@ public class AnalyticsUtil {
             sectionLabel = getInitialsForName(sectionLabel);
             formConcept.setName(sectionLabel + "_" + formConcept.getName());
         }
+        if(formTable.getConcepts().contains(formConcept)) throw new PsiException("column :" + formConcept +" already exists change :"
+                + conceptName + " to make the form column unique");
         formTable.getConcepts().add(formConcept);
     }
 
@@ -321,6 +323,8 @@ public class AnalyticsUtil {
             String multiSelectOptionName = answerConceptName.getName();
             multiSelectOptionName = multiSelectFieldName + "_" + getShortName(multiSelectOptionName);
             answerConceptName.setName(multiSelectOptionName);
+            if(formTable.getConcepts().contains(multiSelectOptionName)) throw new PsiException("Unable to add column:" +
+                    multiSelectOptionName + " rename field :" + formConcept.getName() + " to make table column unique");
             formTable.getConcepts().add(answerConceptName);
         }
     }
@@ -355,6 +359,7 @@ public class AnalyticsUtil {
         ObjectMapper mapper = new ObjectMapper();
 
         Forms forms = parseForm(mapper.readTree(new File(filePath)));
+        if(forms == null) throw new PsiException("Unable to parse form for provided path :" + filePath);
         formCache.put(filePath, forms);
         return forms;
     }
