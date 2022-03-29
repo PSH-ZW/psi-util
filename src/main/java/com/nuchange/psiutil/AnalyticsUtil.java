@@ -355,7 +355,7 @@ public class AnalyticsUtil {
         if (formCache.containsKey(filePath)) {
             return formCache.get(filePath);
         }
-        logger.debug("Finding file  : " + filePath);
+        logger.info("Finding file  : {}", filePath);
         ObjectMapper mapper = new ObjectMapper();
 
         Forms forms = parseForm(filePath);
