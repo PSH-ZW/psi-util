@@ -191,7 +191,7 @@ public class AnalyticsUtil {
     public static String generateCreateTableForForm(String formPath) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 //        local only
-        Forms forms = parseForm(mapper.readTree(new File(formPath)));
+        Forms forms = parseForm(formPath);
         StringBuilder query = new StringBuilder();
         query.append("CREATE TABLE ").append(AnalyticsUtil.generateColumnName(forms.getName())).append("(");
         query.append("id serial PRIMARY KEY, ");
@@ -329,11 +329,11 @@ public class AnalyticsUtil {
         }
     }
 
-    public static Forms parseForm(JsonNode array){
+    public static Forms parseForm(String formPath){
         ObjectMapper mapper = new ObjectMapper();
         Forms c = null;
         try {
-            c = mapper.readValue(array.toString().replace("\\", "").replaceAll("^\"|\"$", ""), Forms.class);
+            c = mapper.readValue(new File(formPath), Forms.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -358,7 +358,7 @@ public class AnalyticsUtil {
         logger.debug("Finding file  : " + filePath);
         ObjectMapper mapper = new ObjectMapper();
 
-        Forms forms = parseForm(mapper.readTree(new File(filePath)));
+        Forms forms = parseForm(filePath);
         if(forms == null) throw new PsiException("Unable to parse form for provided path :" + filePath);
         formCache.put(filePath, forms);
         return forms;
