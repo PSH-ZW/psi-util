@@ -1,6 +1,5 @@
 package com.nuchange.psiutil;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nuchange.psiutil.model.*;
 import org.slf4j.Logger;
@@ -195,7 +194,7 @@ public class AnalyticsUtil {
         StringBuilder query = new StringBuilder();
         query.append("CREATE TABLE ").append(AnalyticsUtil.generateColumnName(forms.getName())).append("(");
         query.append("id serial PRIMARY KEY, ");
-        Set<String> columnNames = generateColumnNamesAndAddToHasSet(forms);
+        Set<String> columnNames = generateColumnNames(forms);
         for (String columnName : columnNames) {
             query.append(columnName).append(" varchar, ");
         }
@@ -206,9 +205,10 @@ public class AnalyticsUtil {
         return query.toString();
     }
 
-    private static Set<String> generateColumnNamesAndAddToHasSet(Forms forms) {
+    private static Set<String> generateColumnNames(Forms forms) {
         Map<String, FormTable> obsWithConcepts = new HashMap<>();
         handleObsControls(forms.getControls(), obsWithConcepts, forms.getName(), null);
+
         Set<String> generatedColumnNames = new HashSet<>();
         if (obsWithConcepts.containsKey(forms.getName())) {
             for (FormConcept concept : obsWithConcepts.get(forms.getName()).getConcepts()) {
@@ -286,6 +286,7 @@ public class AnalyticsUtil {
         } else if (control.getType().equals(OBS_SECTION_CONTROL)) {
             handleObsControls(control.getControls(), obsWithConcepts, tableName, control.getLabel().getValue());
         } else {
+            //Initialising FormTable if not present.
             if (!obsWithConcepts.containsKey(tableName)) {
                 obsWithConcepts.put(tableName, new FormTable(tableName));
             }
@@ -318,8 +319,12 @@ public class AnalyticsUtil {
         //Generate a boolean column for each possible value of the multiselect.
         String multiSelectFieldName = getShortName(formConcept.getName());
         multiSelectFieldName = getInitialsForName(multiSelectFieldName);
-        for(ConceptAnswer answerConcept : formConcept.getAnswers()) {
-            FormConcept answerConceptName = answerConcept.getName();
+        for(ConceptAnswer answerConcept : formConcept.getAnswers()) { //Get each of the answer concepts
+            //The data modelling is a bit confusing here.
+            // The uuid in the FormConcept class inside a ConceptAnswer is the UUID of the concept_name not the concept.
+            // ConceptAnswer class contains the UUID of the actual concept.
+            FormConcept answerConceptName = answerConcept.getName();  //This is the concept_name
+            answerConceptName.setUuid(answerConcept.getUuid()); //change the UUID of the FormConcept to the uuid of the concept.
             String multiSelectOptionName = answerConceptName.getName();
             multiSelectOptionName = multiSelectFieldName + "_" + getShortName(multiSelectOptionName);
             answerConceptName.setName(multiSelectOptionName);
