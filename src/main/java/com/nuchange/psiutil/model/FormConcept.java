@@ -8,6 +8,7 @@ import java.util.List;
 public class FormConcept {
     private String name;
     private String uuid;
+    private String parentUuid;
     private Boolean addMore;
     private List<ConceptAnswer> answers;
 
@@ -41,5 +42,13 @@ public class FormConcept {
 
     public void setAddMore(Boolean addMore) {
         this.addMore = addMore;
+    }
+
+    public String getParentUuid() {
+        return parentUuid == null? "" : parentUuid;
+    }
+
+    public void setParentUuid(String parentUuid) {
+        this.parentUuid = parentUuid;
     }
 }

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class AnalyticsUtil {
 
     private static Logger logger = LoggerFactory.getLogger(AnalyticsUtil.class);
     private static Map<String, Forms> formCache = new HashMap<>();
-    private static Map<Forms, Map<UUID, String>> formColumnCache = new HashMap<>();
+    private static Map<Forms, Map<String, String>> formColumnCache = new HashMap<>();
 
     public static String getInsertQuery(List<String> colHeaders, String target) {
         StringBuilder query = new StringBuilder("INSERT INTO " + target + " (");
@@ -206,43 +207,36 @@ public class AnalyticsUtil {
     }
 
     private static Set<String> generateColumnNames(Forms forms) {
-        Map<String, FormTable> obsWithConcepts = new HashMap<>();
-        handleObsControls(forms.getControls(), obsWithConcepts, forms.getName(), null);
-
-        Set<String> generatedColumnNames = new HashSet<>();
-        if (obsWithConcepts.containsKey(forms.getName())) {
-            for (FormConcept concept : obsWithConcepts.get(forms.getName()).getConcepts()) {
-                String name = AnalyticsUtil.generateColumnName(concept.getName());
-                if(!generatedColumnNames.add(name)) {
-                    String errorMessage = String.format("There is a collision for column name %s." +
-                            " Please update the concept name for one of the form concepts to make it unique.", name);
-                    logger.error(errorMessage);
-                    throw new RuntimeException(errorMessage);
-                }
-            }
-        }
-        return generatedColumnNames;
+        Map<String, String> identifierToColumnNameMap = generateColumnNamesForForm(forms);
+        return new HashSet<>(identifierToColumnNameMap.values());
     }
 
-    private static Map<UUID, String> generateColumnNamesForForm(Forms forms) {
+    private static Map<String, String> generateColumnNamesForForm(Forms forms) {
         Map<String, FormTable> obsWithConcepts = new HashMap<>();
         handleObsControls(forms.getControls(), obsWithConcepts, forms.getName(), null);
 
-        Map<UUID, String> generatedColumnNames = new HashMap<>();
+        Map<String, String> identifierToColumnNameMap = new HashMap<>();
         if (obsWithConcepts.containsKey(forms.getName())) {
             for (FormConcept concept : obsWithConcepts.get(forms.getName()).getConcepts()) {
                 String name = AnalyticsUtil.generateColumnName(concept.getName());
-                if(generatedColumnNames.containsValue(name)) {
+                if(identifierToColumnNameMap.containsValue(name)) {
                     String errorMessage = String.format("There is a collision for column name %s." +
                             " Please update the concept name for one of the form concepts to make it unique.", name);
                     logger.error(errorMessage);
-                    throw new RuntimeException(errorMessage);
+                    throw new PsiException(errorMessage);
                 }
-                generatedColumnNames.put(parseUuid(concept.getUuid()), name);
+                String uniqueIdentifierForColumn = parseUuid(concept.getUuid()).toString();
+                if(StringUtils.hasLength(concept.getParentUuid())) {
+                    //This concept is an answer for a multiselect question. The same option can be repeated across multiple questions.
+                    // For eg: concepts like "Other", "No" etc. So to uniquely identify multiselect answer concepts,
+                    // we append the uuid of the parent as well.
+                    uniqueIdentifierForColumn = parseUuid(concept.getParentUuid()) + uniqueIdentifierForColumn;
+                }
+                identifierToColumnNameMap.put(uniqueIdentifierForColumn, name);
             }
         }
 
-        return generatedColumnNames;
+        return identifierToColumnNameMap;
     }
 
     private static UUID parseUuid(String uuidString) {
@@ -261,11 +255,11 @@ public class AnalyticsUtil {
         return uuid;
     }
 
-    public static Map<UUID, String> getColumnNamesForForm(Forms forms) {
+    public static Map<String, String> getColumnNamesForForm(Forms forms) {
         if(formColumnCache.containsKey(forms)) {
             return formColumnCache.get(forms);
         }
-        Map<UUID, String> columnNames = generateColumnNamesForForm(forms);
+        Map<String, String> columnNames = generateColumnNamesForForm(forms);
         formColumnCache.put(forms, columnNames);
         return columnNames;
     }
@@ -319,12 +313,14 @@ public class AnalyticsUtil {
         //Generate a boolean column for each possible value of the multiselect.
         String multiSelectFieldName = getShortName(formConcept.getName());
         multiSelectFieldName = getInitialsForName(multiSelectFieldName);
+        String parentUuid = formConcept.getUuid();
         for(ConceptAnswer answerConcept : formConcept.getAnswers()) { //Get each of the answer concepts
             //The data modelling is a bit confusing here.
             // The uuid in the FormConcept class inside a ConceptAnswer is the UUID of the concept_name not the concept.
             // ConceptAnswer class contains the UUID of the actual concept.
             FormConcept answerConceptName = answerConcept.getName();  //This is the concept_name
             answerConceptName.setUuid(answerConcept.getUuid()); //change the UUID of the FormConcept to the uuid of the concept.
+            answerConceptName.setParentUuid(parentUuid);
             String multiSelectOptionName = answerConceptName.getName();
             multiSelectOptionName = multiSelectFieldName + "_" + getShortName(multiSelectOptionName);
             answerConceptName.setName(multiSelectOptionName);
