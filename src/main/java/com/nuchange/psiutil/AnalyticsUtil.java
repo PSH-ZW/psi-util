@@ -114,15 +114,15 @@ public class AnalyticsUtil {
     }
 
     public static String replaceSpecialCharactersInColumnName(String name) {
-        name = name.replaceAll(" ", "_").replaceAll(",", "");
-        name = name.replaceAll("-", "_").replaceAll("/", "_");
-        name = name.replaceAll("&", "").replaceAll("\\?", "");
-        name = name.replaceAll("'", "").replaceAll(":", "");
-        name = name.replaceAll("’", "").replaceAll("–", "");
-        name = name.replaceAll("\\.", "_").replaceAll("\\+", "");
+        name = name.replace(" ", "_").replace(",", "");
+        name = name.replace("-", "_").replace("/", "_");
+        name = name.replace("&", "").replace("\\?", "");
+        name = name.replace("'", "").replace(":", "");
+        name = name.replace("’", "").replace("–", "");
+        name = name.replace("\\.", "_").replace("\\+", "");
 
         //This needs to be done at the very last.
-        name = name.replaceAll("_+", "_");
+        name = name.replace("_+", "_");
         return name.toLowerCase();
     }
 
@@ -145,15 +145,15 @@ public class AnalyticsUtil {
             name = shortName + lastName;
         }
         if(name.contains("(")) {
-            name = name.replaceAll("\\(", "_").replaceAll("\\)", "_");
+            name = name.replace("\\(", "_").replace("\\)", "_");
         }
         return name;
     }
 
     private static String getInitialsForName(String name) {
         StringBuilder shortName = new StringBuilder();
-        name = name.replaceAll("\\(", " ").replaceAll("_", " ")
-                .replaceAll("\\)", " ");
+        name = name.replace("\\(", " ").replace("_", " ")
+                .replace("\\)", " ");
         String[] words = name.split("\\s+");
         for (String word : words) {
             shortName.append(word.charAt(0));
