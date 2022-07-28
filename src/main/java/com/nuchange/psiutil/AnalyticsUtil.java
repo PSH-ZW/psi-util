@@ -220,8 +220,8 @@ public class AnalyticsUtil {
             for (FormConcept concept : obsWithConcepts.get(forms.getName()).getConcepts()) {
                 String name = AnalyticsUtil.generateColumnName(concept.getName());
                 if(identifierToColumnNameMap.containsValue(name)) {
-                    String errorMessage = String.format("There is a collision for column name %s." +
-                            " Please update the concept name for one of the form concepts to make it unique.", name);
+                    String errorMessage = String.format("There is a collision for column name %s in %s." +
+                            " Please update the concept name for one of the form concepts to make it unique.", name, forms.getName());
                     logger.error(errorMessage);
                     throw new PsiException(errorMessage);
                 }
